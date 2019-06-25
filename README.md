@@ -24,9 +24,13 @@ The sliders are the minimum and maximum of the image. All points bellow the mini
 ## Options
 
 `--cmap` : Colormap to use, must be chosen amongst Matplotlib cmaps. Default : `'gist_heat'`.
+
 `--noheader` : If you want to use pixels instead of Arcseconds, and therefore not use the header, specify it using this option.
+
 `--background` : Set background color for `None` pixels. Default : `'k'`.
+
 `--function` : Function to apply before plotting. Examples : `'np.log'`, `'lambda x : x**2.'`. Default : `None`.
+
 `--latex` : Enables LaTeX for the legends. Might be slower.
 
 ## Example :
