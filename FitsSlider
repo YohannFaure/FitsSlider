@@ -1,0 +1,105 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""
+Usage example
+
+FitsSlider J1615_edit.fits 
+"""
+import numpy as np
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+from matplotlib.widgets import Slider
+import sys
+from astropy.io import fits
+
+def openimage(location):
+    """
+    opens the image and the header
+    """
+    hdulist = fits.open(location)
+    header = hdulist[0].header
+    image = np.squeeze(hdulist[0].data)
+    return(header, image)
+
+if __name__=='__main__':
+    import argparse
+    parser = argparse.ArgumentParser(description = 'arguments')
+    parser.add_argument("location", help = "Location of the image.",type = str)
+    parser.add_argument("--cmap", help = "Colormap to use, must be chosen amongst Matplotlib cmaps.",type = str, default='gist_heat')
+    parser.add_argument("--noheader", help = "If you want to use pixels instead of ArcSec, and therefore not use the header." , action = 'store_true')
+    parser.add_argument("--background", help = "Set background color.",type = str,default='k')
+    parser.add_argument("--function", help = "Function to apply before plotting (example : np.log).",type = str,default=None)
+    args = parser.parse_args()
+
+    location=args.location
+
+    ##### Open image
+    header,image=openimage(location)
+
+    if args.function:
+        f=eval(args.function)
+        image=f(image)
+
+    ##### Set the scale
+    if not args.noheader :
+        try :
+            pixtosec=np.abs(3600*header['CDELT1'])
+            scalex=image.shape[0]*pixtosec/2
+            scaley=image.shape[1]*pixtosec/2
+            headerbool=True
+        except :
+            scalex=image.shape[0]/2
+            scaley=image.shape[1]/2
+            headerbool=False
+    else :
+        scalex=image.shape[0]/2
+        scaley=image.shape[1]/2
+
+    ##### Set the plot
+    fig, ax = plt.subplots()
+    # Used to divide the plot and make bars
+    divider = make_axes_locatable(ax)
+
+    # Set the background as black
+    ax.set_facecolor(args.background)
+
+    # Labels
+    if not args.noheader and headerbool :
+        ax.set_xlabel('East-West (arcsec)')
+        ax.set_ylabel('South-North (arcsec)')
+    else :
+        ax.set_xlabel('East-West (pixels)')
+        ax.set_ylabel('South-North (pixels)')
+
+    # max and min
+    maximage=np.nanmax(image)
+    minimage=np.nanmin(image)
+
+    # plot image
+    im=ax.imshow(image, interpolation='nearest',cmap=args.cmap,
+            vmin=minimage,vmax=maximage,aspect='equal',origin=0,
+            extent=[scalex,-scalex,-scaley, scaley])
+
+    # colorbar
+    cax = divider.append_axes('right', size='5%', pad=0.05)
+    fig.colorbar(im, cax=cax, orientation='vertical')
+
+    ##### sliders
+    axmax = divider.append_axes('top', size='5%', pad=0.05)
+    smax = Slider(axmax, 'Max', 0, 1, valinit=1, valstep=1/1000)
+    axmin = divider.append_axes('top', size='5%', pad=0.05)
+    smin = Slider(axmin, 'Min', 0, 1, valinit=0, valstep=1/1000)
+
+    # updating the image when slidding
+    def update(val):
+        im.set_clim((smin.val*(maximage-minimage)+minimage,smax.val*(maximage-minimage)+minimage))
+
+    smax.on_changed(update)
+    smin.on_changed(update)
+
+
+    fig.show()
+
+    input("Press Enter to close.")
