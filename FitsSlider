@@ -31,7 +31,12 @@ if __name__=='__main__':
     parser.add_argument("--noheader", help = "If you want to use pixels instead of ArcSec, and therefore not use the header." , action = 'store_true')
     parser.add_argument("--background", help = "Set background color.",type = str,default='k')
     parser.add_argument("--function", help = "Function to apply before plotting (example : np.log).",type = str,default=None)
+    parser.add_argument("--latex", help='Enables the use of LaTeX for the legends. Might be slower.', action='store_true')
     args = parser.parse_args()
+
+    if args.latex:
+        plt.rc('text', usetex=True)
+        plt.rc('font', family='serif')
 
     location=args.location
 
