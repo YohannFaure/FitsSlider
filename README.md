@@ -40,3 +40,5 @@ Run example :
 FitsSlider J1615_sphere.fits --function 'lambda a : a**.5'
 ```
 
+![example image]
+(example.png)
